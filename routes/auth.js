@@ -19,8 +19,7 @@ router.put(
             return Promise.reject("E-Mail address already exists!");
           }
         });
-      })
-      .normalizeEmail(),
+      }),
     body("password").trim().isLength({ min: 5 }),
     body("name").trim().not().isEmpty(),
   ],

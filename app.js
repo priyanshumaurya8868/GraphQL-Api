@@ -9,6 +9,17 @@ const app = express();
 const { v4: uuidv4 } = require("uuid");
 const morgan = require("morgan");
 
+
+app.use(morgan("dev"));
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "OPTIONS, GET, POST, PUT, PATCH, DELETE"
+  );
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  next();
+});
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, "images");
@@ -30,17 +41,6 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-app.use(morgan("dev"));
-app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "OPTIONS, GET, POST, PUT, PATCH, DELETE"
-  );
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-  next();
-});
-
 // app.use(bodyParser.urlencoded()); // x-www-form-urlencoded <form>
 // application/json
 app.use(bodyParser.json());
@@ -53,22 +53,23 @@ app.use(
 
 app.use("/images", express.static(path.join(__dirname, "images")));
 app.use("/feed", feedRoutes);
-app.use("/auth",authRoutes);
+app.use("/auth", authRoutes);
 
 app.use((err, req, res, next) => {
   console.log(err);
   const status = err.statusCode || 500;
   const message = err.message;
   const data = err.data;
-  res.status(status).json({ message: message, data : data});
+  res.status(status).json({ message: message, data: data });
 });
 
 mongoose
   .connect("mongodb://localhost:27017/soshu")
-  .then(() => {
-    console.log(`listening at portNo : 8080`);
-    app.listen(8080);
+  .then((result) => {
+    const server = app.listen(8080);
+    const io = require("./socket").init(server);
+    io.on("connection", (socket) => {
+      console.log("Client connected");
+    });
   })
-  .catch((err) => {
-    console.log(err);
-  });
+  .catch((err) => console.log(err));
