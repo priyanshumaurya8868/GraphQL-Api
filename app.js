@@ -20,6 +20,13 @@ app.use((req, res, next) => {
     "OPTIONS, GET, POST, PUT, PATCH, DELETE"
   );
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  // The problem is express graphql automatically declines anything which is not a post or get request,
+  // so the options request is denied.
+  // & browser  sends  options req before every post or put req
+  if(req.method === 'OPTIONS'){
+   return res.sendStatus(200);
+  }
   next();
 });
 const storage = multer.diskStorage({

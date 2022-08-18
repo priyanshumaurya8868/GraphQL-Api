@@ -30,8 +30,13 @@ type RootMutation {
 createUser(userInput : UserInputData) : User!
 }
 
+type UserData{
+    token : String!
+    userId : String!
+}
+
 type RootQuery{
- hello : String!
+ login(email: String! password : String!) : UserData!
  }
 
 schema {
