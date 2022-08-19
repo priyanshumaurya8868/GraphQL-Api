@@ -29,6 +29,10 @@ app.use((req, res, next) => {
   }
   next();
 });
+
+
+app.use(require('./middleware/auth'))
+
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, "images");
@@ -82,6 +86,8 @@ app.use(
 
 app.use((err, req, res, next) => {
   console.log(err);
+  console.log(err.message);
+  console.log(err.data)
   const status = err.statusCode || 500;
   const message = err.message;
   const data = err.data;

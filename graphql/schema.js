@@ -26,17 +26,29 @@ input UserInputData{
  password :String!
  }
 
+input PostInputData{
+    title : String!
+    imageUrl : String!
+    content : String!
+}
+
 type RootMutation {
 createUser(userInput : UserInputData) : User!
+createPost(postInput : PostInputData) : Post!
 }
 
 type UserData{
     token : String!
     userId : String!
 }
+type PostData {
+    posts: [Post!]!
+    totalPosts: Int!
+}
 
 type RootQuery{
  login(email: String! password : String!) : UserData!
+ posts(page: Int): PostData! 
  }
 
 schema {
