@@ -41,61 +41,61 @@ module.exports = {
   },
 
   // login: async function( email, password )  -> cant write like this as  they both comes in object called args
-  login: async function({ email, password }) {
+  login: async function ({ email, password }) {
     const user = await User.findOne({ email: email });
     if (!user) {
-      const error = new Error('User not found.');
+      const error = new Error("User not found.");
       error.code = 401;
       throw error;
     }
     const isEqual = await bcrypt.compare(password, user.password);
     if (!isEqual) {
-      const error = new Error('Password is incorrect.');
+      const error = new Error("Password is incorrect.");
       error.code = 401;
       throw error;
     }
     const token = jwt.sign(
       {
         userId: user._id.toString(),
-        email: user.email
+        email: user.email,
       },
       process.env.jwt_secret_key,
-      { expiresIn: '1h' }
+      { expiresIn: "1h" }
     );
     return { token: token, userId: user._id.toString() };
   },
 
-  createPost : async function(args,req){
-    const postInput = args.postInput
-    if(!req.isAuth){
-      const error = new Error('Not authenticated!');
+  createPost: async function (args, req) {
+    const postInput = args.postInput;
+    if (!req.isAuth) {
+      const error = new Error("Not authenticated!");
       error.code = 401;
-      throw error
+      throw error;
     }
     const errors = [];
     if (
       validator.isEmpty(postInput.title) ||
       !validator.isLength(postInput.title, { min: 5 })
     ) {
-      errors.push({ message: 'Title is invalid.' });
+      errors.push({ message: "Title is invalid." });
     }
     if (
       validator.isEmpty(postInput.content) ||
       !validator.isLength(postInput.content, { min: 5 })
     ) {
-      errors.push({ message: 'Content is invalid.' });
+      errors.push({ message: "Content is invalid." });
     }
     if (errors.length > 0) {
-      const error = new Error('Invalid input.');
+      const error = new Error("Invalid input.");
       error.data = errors;
       error.code = 422;
       throw error;
     }
 
-    const user =await User.findById(req.userId)
+    const user = await User.findById(req.userId);
 
     if (!user) {
-      const error = new Error('Invalid user.');
+      const error = new Error("Invalid user.");
       error.code = 401;
       throw error;
     }
@@ -104,25 +104,23 @@ module.exports = {
       title: postInput.title,
       content: postInput.content,
       imageUrl: postInput.imageUrl,
-      creator : user
+      creator: user,
     });
     const createdPost = await post.save();
     user.posts.push(createdPost);
-    await user.save()
-    
+    await user.save();
+
     return {
       ...createdPost._doc,
       _id: createdPost._id.toString(),
       createdAt: createdPost.createdAt.toISOString(),
-      updatedAt: createdPost.updatedAt.toISOString()
+      updatedAt: createdPost.updatedAt.toISOString(),
     };
-
-
   },
 
-  posts: async function({ page }, req) {
+  posts: async function ({ page }, req) {
     if (!req.isAuth) {
-      const error = new Error('Not authenticated!');
+      const error = new Error("Not authenticated!");
       error.code = 401;
       throw error;
     }
@@ -135,17 +133,38 @@ module.exports = {
       .sort({ createdAt: -1 })
       .skip((page - 1) * perPage)
       .limit(perPage)
-      .populate('creator');
+      .populate("creator");
     return {
-      posts: posts.map(p => {
+      posts: posts.map((p) => {
         return {
           ...p._doc,
           _id: p._id.toString(),
           createdAt: p.createdAt.toISOString(),
-          updatedAt: p.updatedAt.toISOString()
+          updatedAt: p.updatedAt.toISOString(),
         };
       }),
-      totalPosts: totalPosts
+      totalPosts: totalPosts,
     };
-  }
+  },
+
+  post: async function ({ id }, req) {
+    if (!req.isAuth) {
+      const error = new Error("Not authenticated!");
+      error.code = 401;
+      throw error;
+    }
+    const post = await Post.findById(id).populate("creator");
+    if (!post) {
+      const error = new Error("Post not found!");
+      error.code = 404;
+      throw error;
+    }
+
+    return {
+      ...post._doc,
+      _id: post._id.toString(),
+      createdAt: post.createdAt.toISOString(),
+      updatedAt: post.updatedAt.toISOString(),
+    };
+  },
 };
