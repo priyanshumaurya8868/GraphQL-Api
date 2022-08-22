@@ -59,7 +59,7 @@ exports.createPost = (req, res, next) => {
     imageUrl: imageUrl,
     creator: req.userId,
   });
-  post
+ return post
     .save()
     .then((result) => {
       return User.findById(req.userId);
@@ -70,16 +70,19 @@ exports.createPost = (req, res, next) => {
       return user.save();
     })
     .then((result) => {
-      io.getIO().emit('posts',{
-        action : 'create',
-        post : {...post, creator: { _id: creator._id, name: creator.name }}
-      })
+
+      // io.getIO().emit('posts',{
+      //   action : 'create',
+      //   post : {...post, creator: { _id: creator._id, name: creator.name }}
+      // })
 
       res.status(201).json({
         message: "Post created successfully!",
         post: post,
         creator: { _id: creator._id, name: creator.name },
       });
+
+      return result;
     })
     .catch((err) => {
       if (!err.statusCode) {
